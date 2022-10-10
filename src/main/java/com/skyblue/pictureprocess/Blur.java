@@ -1,22 +1,38 @@
 
 package com.skyblue.pictureprocess;
 
-import java.awt.image.BufferedImage;
-
 public class Blur {
+    
+    /** 
+     * Blurs a Black and White image, via just the red channel.
+     * Uses just the average of 4 adjacent pixels to blur the image
+     * 
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @param w width of the original image
+     * @param h height of the original image
+     * @return int[] raw pixel data as integers of 0xRR_GG_BB
+     */
     public static int[] blur(int[] pixelog, int w, int h){
         int[] pixelnew= new int[w*h-w-h];
-        int r, g, b, rgb;
         
         for(int i=0; i<((w*h)-w-h); i++){
-            r= ((pixelnew[i] & 0xFF_00_00)+
-               (pixelnew[i+1] & 0xFF_00_00)+
-               (pixelnew[i+w] & 0xFF_00_00)+
-               (pixelnew[i+w+1] & 0xFF_00_00));
+            pixelnew[i]= ((pixelog[i] & 0xFF_00_00)+
+               (pixelog[i+1] & 0xFF_00_00)+
+               (pixelog[i+w] & 0xFF_00_00)+
+               (pixelog[i+w+1] & 0xFF_00_00));
         }
         return pixelnew;
     }
     
+    
+    /** 
+     * A private function to return the maximum of 3 floats
+     * 
+     * @param a
+     * @param b
+     * @param c
+     * @return float
+     */
     private static float max(float a, float b, float c){
         if(a>b){
             return b>c ? a : c>a ? c: a;
@@ -25,6 +41,13 @@ public class Blur {
             return a>c ? b : c>b ? c: b;
         }
     }
+    
+    /** 
+     * Calculates the Cyan channel using the RGB channels of an image
+     * Used to get the CMY data of an image
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @return int[] array of the Cyan channel, the Cyan values of every pixel
+     */
     public static int[] cyan(int[] pixelog){
         int[] cyanvalues= new int[pixelog.length];
         float r, g, b, k, c;
@@ -38,8 +61,15 @@ public class Blur {
         }
         return cyanvalues;
     }
+    
+    /** 
+     * Calculates the Magenta channel using the RGB channels of an image
+     * Used to get the CMY data of an image
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @return int[] array of the Magenta channel, the Magenta values of every pixel
+     */
     public static int[] magenta(int[] pixelog){
-        int[] cyanvalues= new int[pixelog.length];
+        int[] magentavalues= new int[pixelog.length];
         float r, g, b, k, c;
         for(int i=0; i< pixelog.length; i++){
             r=((pixelog[i] & 0xFF_00_00)/65536*255);
@@ -47,12 +77,19 @@ public class Blur {
             b=((pixelog[i] & 0x00_00_FF)/255);
             k=1.0F-max(r,g,b);
             c=(1-g-k)/(1-k);
-            cyanvalues[i]=((int)(255*c))*65536+((int)(255*c));
+            magentavalues[i]=((int)(255*c))*65536+((int)(255*c));
         }
-        return cyanvalues;
+        return magentavalues;
     }
+    
+    /** 
+     * Calculates the Yellow channel using the RGB channels of an image
+     * Used to get the CMY data of an image
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @return int[] array of the Yellow channel, the Yellow values of every pixel
+     */
     public static int[] yellow(int[] pixelog){
-        int[] cyanvalues= new int[pixelog.length];
+        int[] yellowvalues= new int[pixelog.length];
         float r, g, b, k, c;
         for(int i=0; i< pixelog.length; i++){
             r=((pixelog[i] & 0xFF_00_00)/65536*255);
@@ -60,31 +97,45 @@ public class Blur {
             b=((pixelog[i] & 0x00_00_FF)/255);
             k=1.0F-max(r,g,b);
             c=(1-b-k)/(1-k);
-            cyanvalues[i]=(((int)(255*c))*65536)+(((int)(255*c))*256);
+            yellowvalues[i]=(((int)(255*c))*65536)+(((int)(255*c))*256);
         }
-        return cyanvalues;
-    }
-    public static int[] black(int[] pixelog){
-        int[] cyanvalues= new int[pixelog.length];
-        float r, g, b, k, c;
-        for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
-            cyanvalues[i]=((int)(255*k))*65536+((int)(255*k))*256+((int)(255*k));
-        }
-        return cyanvalues;
+        return yellowvalues;
     }
     
-    public static int[] funkyfilter(int[] pixelog){
-        int[] pixelvalues= new int[pixelog.length];
-        float r, g, b, k, c;
+    /** 
+     * Calculates the K channel using the RGB channels of an image
+     * Used to get the CMYK data of an image
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @return int[] array of the K channel, the K values of every pixel
+     */
+    public static int[] black(int[] pixelog){
+        int[] kvalues= new int[pixelog.length];
+        float r, g, b, k;
         for(int i=0; i< pixelog.length; i++){
             r=((pixelog[i] & 0xFF_00_00)/65536*255);
             g=((pixelog[i] & 0x00_FF_00)/256*255);
             b=((pixelog[i] & 0x00_00_FF)/255);
             k=1.0F-max(r,g,b);
+            kvalues[i]=((int)(255*k))*65536+((int)(255*k))*256+((int)(255*k));
+        }
+        return kvalues;
+    }
+    
+    
+    /** 
+     * Applies some kind of filter to the pixel data, don't exactly know, try it and suprise yourself
+     * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
+     * @return int[] raw pixel data as integers of 0xRR_GG_BB after applying the filter
+     */
+    public static int[] funkyfilter(int[] pixelog){
+        int[] pixelvalues= new int[pixelog.length];
+        float r, g, b, k;
+        for(int i=0; i< pixelog.length; i++){
+            r=((pixelog[i] & 0xFF_00_00)/65536*255);
+            g=((pixelog[i] & 0x00_FF_00)/256*255);
+            b=((pixelog[i] & 0x00_00_FF)/255);
+            k=1.0F-max(r,g,b);
+            //doing something to the RGB channels after this i have no idea i wrote this years ago
             if(k>0.5F){
                 pixelvalues[i]= ((int)(255*k))*65536+((int)(255*k))*256;
             }
