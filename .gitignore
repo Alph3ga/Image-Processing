@@ -25,5 +25,6 @@ hs_err_pid*
 #pictures
 *.png
 *.jpg
+*.JPEG
 *.jpeg
 *.gif
