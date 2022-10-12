@@ -15,12 +15,29 @@ public class Process {
     public static final float[][] SOBEL_X =new float[][]{{-1.0F,0,1.0F},{-2.0F,0,2.0F},{-1.0F,0,1.0F}};
     public static final float[][] SOBEL_Y =new float[][]{{1.0F, 2.0F, 1.0F},{0.0F, 0.0F, 0.0F},{-1.0F, -2.0F, -1.0F}};
     
-    public static int[] getRGB(BufferedImage og){
-        int[] pixels= new int[og.getHeight()*og.getWidth()];
-        og.getRGB(0, 0, og.getWidth(), og.getHeight(), pixels, 0, og.getWidth());
+    
+    /** 
+     * Get the integer array of ARGB data as 0xAA_RR_GG_BB for every pixel in the BUfferedImage
+     * in order from left to right for every row from top to bottom 
+     * @param Buffered_og the Buffered Image instance of the Image
+     * @return int[] the ARGB data
+     */
+    public static int[] getRGB(BufferedImage Buffered_og){
+        int[] pixels= new int[Buffered_og.getHeight()*Buffered_og.getWidth()];
+        Buffered_og.getRGB(0, 0, 
+            Buffered_og.getWidth(), Buffered_og.getHeight(), 
+            pixels, 0, Buffered_og.getWidth());
         return pixels;
     }
     
+    
+    /** 
+     * Make a PNG format image from raw RBG data encoded as 0xRR_GG_BB
+     * @param rgb the RGB data array
+     * @param name the name of the new Image file to be made
+     * @param w the width of the image
+     * @param h the height of the image
+     */
     public static void makeImage(int[] rgb, String name, int w, int h){
         File imageFile= new File(name);
         BufferedImage img= new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
@@ -32,7 +49,12 @@ public class Process {
         }
     }
     
-    /**convert normalized values from 0-1 to black and white pixels (0-255, 3bytes)**/
+    /**
+     * convert normalized values from 0-1 to black and white pixel data (0-255, 3bytes)
+     * to be used as RGB values
+     * @param normalized the array of normalized value of the pixel colour
+     * @return int[] the RGB values 
+     */
     public static int[] bnwRGB(float[] normalized){
         int[] pixels= new int[normalized.length];
         for(int i=0; i<normalized.length; i++){
@@ -41,6 +63,14 @@ public class Process {
         return pixels;
     }
     
+    
+    /** 
+     * just an internal private function to get the max of 3 integers
+     * @param a
+     * @param b
+     * @param c
+     * @return int
+     */
     private static int max(int a, int b, int c){
         if(a>b){
             return b>c ? a : c>a ? c: a;
@@ -50,7 +80,12 @@ public class Process {
         }
     }
     
-    /**convert coloured pixels to rgb**/
+    /**
+     * Get the RGB pixel data converted to pure monochrome black and white data 
+     * using the colour value of the pixel
+     * @param pixels the RGB data
+     * @return int[] the black and white data
+     */
     public static int[] convertBNW(int[] pixels){
         int[] newp= new int[pixels.length];
         int r, g, b;
@@ -63,14 +98,31 @@ public class Process {
         return newp;
     }
     
+    
+    /** 
+     * Create a BufferedImage instance from the image at the given path,
+     * used RGB colour model, disregards any alpha values
+     * @param path the path of the image file
+     * @return BufferedImage
+     */
     public static BufferedImage createBufferedImage(String path){
         Image img=new ImageIcon(path).getImage();
-        BufferedImage bi=new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g= bi.createGraphics();
-        g.drawImage(img, 0, 0, null);
-        return bi;
+        BufferedImage BImage=
+            new BufferedImage(img.getWidth(null), 
+                img.getHeight(null), 
+                BufferedImage.TYPE_INT_RGB);
+        Graphics2D g= BImage.createGraphics();
+        g.drawImage(img, 0, 0, null); //draw the image onto the newly created BufferedImage
+        return BImage;
     }
     
+    
+    /** 
+     * Get normalized array data in the range 0-1 from monochrome BnW pixel data
+     * Uses only the blue channel in the RGB model, that is, the last byte
+     * @param pixels the BnW pixel data
+     * @return float[] the normalized data
+     */
     public static float[] normalize(int[] pixels){
         float[] values=new float[pixels.length];
         for(int i=0; i<pixels.length; i++){
@@ -79,7 +131,16 @@ public class Process {
         return values;
     }
     
-    public static float[] kernelConvolution(float[][] kernel, float[]pixels, int width, int height){//3x3 kernel only
+    
+    /** 
+     * Uses a 3x3 kernel and convolutes it with the normalized pixel value data from 0-1
+     * @param kernel the 2D float array to be used as kernel
+     * @param pixels the normalized pixel data
+     * @param width the width of the image
+     * @param height the height of the image
+     * @return float[] the convoluted pixel data
+     */
+    public static float[] kernelConvolution(float[][] kernel, float[] pixels, int width, int height){//3x3 kernel only
         float ktotal= kernel[0][0]+kernel[0][1]+kernel[0][2]+
                 kernel[1][0]+kernel[1][1]+kernel[1][2]+
                 kernel[2][0]+kernel[2][1]+kernel[2][2];
@@ -147,6 +208,12 @@ public class Process {
         return pnew;
     }
     
+    
+    /** 
+     * Normalizes the data convoluted by Sobel Kernel from -4 to 4, to 0-1
+     * @param pixels the convoluted data to be normalized
+     * @return float[] the normalized data
+     */
     public static float[] singleSobelnormalize(float[] pixels){
         float[] value= new float[pixels.length];
         for(int i=0; i<pixels.length; i++){
@@ -155,6 +222,13 @@ public class Process {
         return value;
     }
     
+    
+    /** 
+     * @param pixels
+     * @param width
+     * @param height
+     * @return float[]
+     */
     public static float[] sobelFull(float[] pixels, int width, int height){
         float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height));
         float[] sy= singleSobelnormalize(Process.kernelConvolution(SOBEL_Y, pixels, width, height));
@@ -165,6 +239,13 @@ public class Process {
         return values;
     }
     
+    
+    /** 
+     * @param pixels
+     * @param width
+     * @param height
+     * @return float[]
+     */
     public static float[] sobelFullx(float[] pixels, int width, int height){
         float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height));
         float[] sy= singleSobelnormalize(Process.kernelConvolution(SOBEL_Y, pixels, width, height));
@@ -177,6 +258,13 @@ public class Process {
         return values;
     }
         
+    
+    /** 
+     * @param pixels
+     * @param width
+     * @param height
+     * @return float[]
+     */
     public static float[] cannyEdge(float[] pixels, int width, int height){
         float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height));
         float[] sy= singleSobelnormalize(Process.kernelConvolution(SOBEL_Y, pixels, width, height));
@@ -213,6 +301,11 @@ public class Process {
         return values;
     }
     
+    
+    /** 
+     * @param pixels
+     * @return int[]
+     */
     public static int[] invert(int[] pixels){
         int[] newpixels= new int[pixels.length];
         for(int i=0; i<pixels.length; i++){
