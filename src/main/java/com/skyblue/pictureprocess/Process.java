@@ -224,13 +224,15 @@ public class Process {
     
     
     /** 
-     * @param pixels
-     * @param width
-     * @param height
-     * @return float[]
+     * Takes the normalized 0-1 image pixel value data, applies Sobel kernel in both X and Y direction
+     * and renormalizes the data in the range of 0-1
+     * @param pixels the normalized image data
+     * @param width the width of the image
+     * @param height the height of the image
+     * @return float[] normalized data after sobel kernel convolution
      */
     public static float[] sobelFull(float[] pixels, int width, int height){
-        float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height));
+        float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height)); 
         float[] sy= singleSobelnormalize(Process.kernelConvolution(SOBEL_Y, pixels, width, height));
         float[] values= new float[pixels.length];
         for(int i=0; i< pixels.length; i++){
@@ -241,10 +243,12 @@ public class Process {
     
     
     /** 
-     * @param pixels
-     * @param width
-     * @param height
-     * @return float[]
+     * Takes the normalized 0-1 image pixel value data, applies Sobel kernel in both X and Y direction
+     * and renormalizes the data in the range of -0.5 - 0.5
+     * @param pixels the normalized image data
+     * @param width the width of the image
+     * @param height the height of the image
+     * @return float[] normalized data after sobel kernel convolution
      */
     public static float[] sobelFullx(float[] pixels, int width, int height){
         float[] sx= singleSobelnormalize(Process.kernelConvolution(SOBEL_X, pixels, width, height));
@@ -303,8 +307,9 @@ public class Process {
     
     
     /** 
-     * @param pixels
-     * @return int[]
+     * Applies an inversion(negative) filter on the RGB data 0xRR_GG_BB
+     * @param pixels the RGB 
+     * @return int[] the inverted data
      */
     public static int[] invert(int[] pixels){
         int[] newpixels= new int[pixels.length];
