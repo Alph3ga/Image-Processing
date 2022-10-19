@@ -15,11 +15,14 @@ public class Blur {
     public static int[] blur(int[] pixelog, int w, int h){
         int[] pixelnew= new int[w*h-w-h];
         
-        for(int i=0; i<((w*h)-w-h); i++){
+        for(int i=0; i<((w*h)-w-h); i++){ // fix this later, get 4 adjacent centered on the pixel instead of this, do edge cases differently
             pixelnew[i]= ((pixelog[i] & 0xFF_00_00)+
                (pixelog[i+1] & 0xFF_00_00)+
                (pixelog[i+w] & 0xFF_00_00)+
                (pixelog[i+w+1] & 0xFF_00_00));
+               
+            pixelnew[i]= pixelnew[i]>>>18; // 16+2, shifting 16 bits to get the red channel, 2 more to divide by 4 to get average
+            pixelnew[i]*= 0x01_01_01; // getting the whole RGB integer 
         }
         return pixelnew;
     }
@@ -52,11 +55,17 @@ public class Blur {
         int[] cyanvalues= new int[pixelog.length];
         float r, g, b, k, c;
         for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
+            r= (pixelog[i] & 0xFF_00_00)>>>16;
+            g= (pixelog[i] & 0x00_FF_00)>>>8;
+            b= (pixelog[i] & 0x00_00_FF);
+
+            //normalizing to 0-1
+            r/= 255;
+            g/= 255;
+            b/= 255;
+            k= 1.0F-max(r,g,b);
             c=(1-r-k)/(1-k);
+
             cyanvalues[i]=((int)(255*c))*256+((int)(255*c));
         }
         return cyanvalues;
