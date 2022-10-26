@@ -29,4 +29,6 @@ hs_err_pid*
 *.jpeg
 *.gif
 
+*.bak
+
 src/main/java/com/skyblue/pictureprocess/Main.java
