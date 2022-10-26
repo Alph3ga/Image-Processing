@@ -6,6 +6,7 @@ public class Blur {
     /** 
      * Blurs a Black and White image, via just the red channel.
      * Uses just the average of 4 adjacent pixels to blur the image
+     * You can also just use kernel convolution to get the same result
      * 
      * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
      * @param w width of the original image
@@ -15,15 +16,27 @@ public class Blur {
     public static int[] blur(int[] pixelog, int w, int h){
         int[] pixelnew= new int[w*h-w-h];
         
-        for(int i=0; i<((w*h)-w-h); i++){ // fix this later, get 4 adjacent centered on the pixel instead of this, do edge cases differently
-            pixelnew[i]= ((pixelog[i] & 0xFF_00_00)+
-               (pixelog[i+1] & 0xFF_00_00)+
-               (pixelog[i+w] & 0xFF_00_00)+
-               (pixelog[i+w+1] & 0xFF_00_00));
+        for(int i=w; i<((w*h)-w); i++){  // just the middle here
+
+            pixelnew[i]= ((pixelog[i-w] & 0xFF_00_00)+  // upper pixel
+               (pixelog[i+1] & 0xFF_00_00)+  // right pixel
+               (pixelog[i-1] & 0xFF_00_00)+  // left pixel
+               (pixelog[i+w] & 0xFF_00_00));  // lower pixel
                
-            pixelnew[i]= pixelnew[i]>>>18; // 16+2, shifting 16 bits to get the red channel, 2 more to divide by 4 to get average
-            pixelnew[i]*= 0x01_01_01; // getting the whole RGB integer 
+            pixelnew[i]= pixelnew[i]>>>18;  // 16+2, shifting 16 bits to get the red channel, 2 more to divide by 4 to get average
+            pixelnew[i]*= 0x01_01_01;  // getting the whole RGB integer 
         }
+
+        for(int i=1; i<w-1; i++){  // top pixels
+            pixelnew[i]= ((pixelog[i-1] & 0xFF_00_00)+  // left pixel
+               (pixelog[i+1] & 0xFF_00_00)+  // right pixel
+               (pixelog[i+w] & 0xFF_00_00));  // lower pixel
+               
+            pixelnew[i]= pixelnew[i]>>>16;  // 16, shifting 16 bits to get the red channel
+            pixelnew[i]/= 3;  // getting the average
+            pixelnew[i]*= 0x01_01_01;  // getting the whole RGB integer 
+        }
+
         return pixelnew;
     }
     
@@ -75,18 +88,24 @@ public class Blur {
      * Calculates the Magenta channel using the RGB channels of an image
      * Used to get the CMY data of an image
      * @param pixelog the array of raw pixel data as integers of 0xRR_GG_BB
-     * @return int[] array of the Magenta channel, the Magenta values of every pixel
+     * @return int[] 
+     * array of the Magenta channel, the Magenta values of every pixel
      */
     public static int[] magenta(int[] pixelog){
         int[] magentavalues= new int[pixelog.length];
-        float r, g, b, k, c;
+        float r, g, b, k, m;
         for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
-            c=(1-g-k)/(1-k);
-            magentavalues[i]=((int)(255*c))*65536+((int)(255*c));
+            r= (pixelog[i] & 0xFF_00_00)>>>16;
+            g= (pixelog[i] & 0x00_FF_00)>>>8;
+            b= (pixelog[i] & 0x00_00_FF);
+
+            //normalizing to 0-1
+            r/= 255;
+            g/= 255;
+            b/= 255;
+            k= 1.0F-max(r,g,b);
+            m=(1-g-k)/(1-k);
+            magentavalues[i]=((int)(255*m))*65536+((int)(255*m));
         }
         return magentavalues;
     }
@@ -99,14 +118,19 @@ public class Blur {
      */
     public static int[] yellow(int[] pixelog){
         int[] yellowvalues= new int[pixelog.length];
-        float r, g, b, k, c;
+        float r, g, b, k, y;
         for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
-            c=(1-b-k)/(1-k);
-            yellowvalues[i]=(((int)(255*c))*65536)+(((int)(255*c))*256);
+            r= (pixelog[i] & 0xFF_00_00)>>>16;
+            g= (pixelog[i] & 0x00_FF_00)>>>8;
+            b= (pixelog[i] & 0x00_00_FF);
+
+            //normalizing to 0-1
+            r/= 255;
+            g/= 255;
+            b/= 255;
+            k= 1.0F-max(r,g,b);
+            y=(1-b-k)/(1-k);
+            yellowvalues[i]=(((int)(255*y))*65536)+(((int)(255*y))*256);
         }
         return yellowvalues;
     }
@@ -121,10 +145,15 @@ public class Blur {
         int[] kvalues= new int[pixelog.length];
         float r, g, b, k;
         for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
+            r= (pixelog[i] & 0xFF_00_00)>>>16;
+            g= (pixelog[i] & 0x00_FF_00)>>>8;
+            b= (pixelog[i] & 0x00_00_FF);
+
+            //normalizing to 0-1
+            r/= 255;
+            g/= 255;
+            b/= 255;
+            k= 1.0F-max(r,g,b);
             kvalues[i]=((int)(255*k))*65536+((int)(255*k))*256+((int)(255*k));
         }
         return kvalues;
@@ -140,10 +169,15 @@ public class Blur {
         int[] pixelvalues= new int[pixelog.length];
         float r, g, b, k;
         for(int i=0; i< pixelog.length; i++){
-            r=((pixelog[i] & 0xFF_00_00)/65536*255);
-            g=((pixelog[i] & 0x00_FF_00)/256*255);
-            b=((pixelog[i] & 0x00_00_FF)/255);
-            k=1.0F-max(r,g,b);
+            r= (pixelog[i] & 0xFF_00_00)>>>16;
+            g= (pixelog[i] & 0x00_FF_00)>>>8;
+            b= (pixelog[i] & 0x00_00_FF);
+
+            //normalizing to 0-1
+            r/= 255;
+            g/= 255;
+            b/= 255;
+            k= 1.0F-max(r,g,b);
             //doing something to the RGB channels after this i have no idea i wrote this years ago
             if(k>0.5F){
                 pixelvalues[i]= ((int)(255*k))*65536+((int)(255*k))*256;
