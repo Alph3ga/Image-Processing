@@ -112,7 +112,7 @@ public class Process {
                 img.getHeight(null), 
                 BufferedImage.TYPE_INT_RGB);
         Graphics2D g= BImage.createGraphics();
-        g.drawImage(img, 0, 0, null); //draw the image onto the newly created BufferedImage
+        g.drawImage(img, 0, 0, null); // draw the image onto the newly created BufferedImage
         return BImage;
     }
     
@@ -141,68 +141,61 @@ public class Process {
      * @return float[] the convoluted pixel data
      */
     public static float[] kernelConvolution(float[][] kernel, float[] pixels, int width, int height){//3x3 kernel only
-        float ktotal= kernel[0][0]+kernel[0][1]+kernel[0][2]+
-                kernel[1][0]+kernel[1][1]+kernel[1][2]+
-                kernel[2][0]+kernel[2][1]+kernel[2][2];
+
         float[] pnew=new float[pixels.length];
-        float total;
-        for(int i= width+1; i<pixels.length-width-1; i++){//middle pixels
-            total= pixels[i-width-1]*kernel[0][0]+ pixels[i-width]*kernel[0][1]+ pixels[i-width+1]*kernel[0][2]+
-                    pixels[i-1]*kernel[1][0]+ pixels[i]*kernel[1][1]+ pixels[i+1]*kernel[1][2]+
-                    pixels[i+width-1]*kernel[2][0]+ pixels[i+width]*kernel[2][1]+ pixels[i+width+1]*kernel[2][2];
-            pnew[i]=total;///ktotal;
+        for(int i= width+1; i<pixels.length-width-1; i++){ // middle pixels
+            total= pixels[i-width-1]*kernel[0][0] + pixels[i-width]*kernel[0][1] + pixels[i-width+1]*kernel[0][2] +
+                    pixels[i-1]*kernel[1][0] + pixels[i]*kernel[1][1] + pixels[i+1]*kernel[1][2] +
+                    pixels[i+width-1]*kernel[2][0] + pixels[i+width]*kernel[2][1] + pixels[i+width+1]*kernel[2][2];
+            pnew[i]=total;
         }
         
-        //top-left corner
-        total=pixels[0]*kernel[1][1]+ pixels[1]*kernel[1][2]+
-                pixels[width]*kernel[2][1]+ pixels[width+1]*kernel[2][2];
-        pnew[0]=total;//(kernel[1][1]+kernel[1][2]+kernel[2][1]+kernel[2][2]);
+        // top-left corner
+        pnew[0]=
+            pixels[0]*kernel[1][1] + pixels[1]*kernel[1][2] +
+            pixels[width]*kernel[2][1] + pixels[width+1]*kernel[2][2];
         
-        //top-right corner
-        total=pixels[width-2]*kernel[1][0]+ pixels[width-1]*kernel[1][1]+
-                pixels[2*width-2]*kernel[2][0]+ pixels[2*width-1]*kernel[2][1];
-        pnew[width-1]=total;//(kernel[1][0]+kernel[1][1]+kernel[2][0]+kernel[2][1]);
+        // top-right corner
+        pnew[width-1]=
+            pixels[width-2]*kernel[1][0] + pixels[width-1]*kernel[1][1] +
+            pixels[2*width-2]*kernel[2][0] + pixels[2*width-1]*kernel[2][1];
         
-        //bottom-left corner
-        total=pixels[(height-2)*width]*kernel[0][1]+ pixels[(height-2)*width+1]*kernel[0][2]+
-                pixels[(height-1)*width]*kernel[1][1]+ pixels[(height-1)*width+1]*kernel[1][2];
-        pnew[(height-1)*width]=total;//(kernel[0][1]+kernel[0][2]+kernel[1][1]+kernel[1][2]);
+        // bottom-left corner
+        pnew[(height-1)*width]=
+            pixels[(height-2)*width]*kernel[0][1] + pixels[(height-2)*width+1]*kernel[0][2] +
+            pixels[(height-1)*width]*kernel[1][1] + pixels[(height-1)*width+1]*kernel[1][2];
         
-        //bottom-right corner
-        total=pixels[(height-1)*width-2]*kernel[0][0]+ pixels[(height-1)*width-1]*kernel[0][1]+
-                pixels[width*height-2]*kernel[1][0]+ pixels[width*height-1]*kernel[1][1];
-        pnew[width*height-1]=total;//(kernel[0][0]+kernel[0][1]+kernel[1][0]+kernel[1][1]);
+        // bottom-right corner
+        pnew[width*height-1]=
+            pixels[(height-1)*width-2]*kernel[0][0] + pixels[(height-1)*width-1]*kernel[0][1] +
+            pixels[width*height-2]*kernel[1][0] + pixels[width*height-1]*kernel[1][1];
         
-        //top edge
-        ktotal=kernel[1][0]+kernel[1][1]+kernel[1][2]+kernel[2][0]+kernel[2][1]+kernel[2][2];
+        // top edge
         for(int i=1; i<width-1; i++){
-            total=pixels[i-1]*kernel[1][0]+ pixels[i]*kernel[1][1]+ pixels[i+1]*kernel[1][2]+
-                    pixels[i-1+width]*kernel[2][0]+ pixels[i+width]*kernel[2][1]+ pixels[i+1+width]*kernel[2][2];
-            pnew[i]=total;//ktotal;
+            pnew[i]=
+                pixels[i-1]*kernel[1][0]+ pixels[i]*kernel[1][1]+ pixels[i+1]*kernel[1][2]+
+                pixels[i-1+width]*kernel[2][0]+ pixels[i+width]*kernel[2][1]+ pixels[i+1+width]*kernel[2][2];
         }
         
-        //bottom edge
-        ktotal=kernel[0][0]+kernel[0][1]+kernel[0][2]+kernel[1][0]+kernel[1][1]+kernel[1][2];
+        // bottom edge
         for(int i=((height-1)*width+1); i<width*height-1; i++){
-            total=pixels[i-1-width]*kernel[0][0]+ pixels[i-width]*kernel[0][1]+ pixels[i+1-width]*kernel[0][2]+
-                    pixels[i-1]*kernel[1][0]+ pixels[i]*kernel[1][1]+ pixels[i+1]*kernel[1][2];
-            pnew[i]=total;//ktotal;
+            pnew[i]=
+                pixels[i-1-width]*kernel[0][0]+ pixels[i-width]*kernel[0][1]+ pixels[i+1-width]*kernel[0][2]+
+                pixels[i-1]*kernel[1][0]+ pixels[i]*kernel[1][1]+ pixels[i+1]*kernel[1][2];
         }
         
-        //left edge
-        ktotal=kernel[0][1]+kernel[1][1]+kernel[2][1]+kernel[0][2]+kernel[1][2]+kernel[2][2];
+        // left edge
         for(int i=width; i<(height-1)*width; i+=width){
-            total=pixels[i-width]*kernel[0][1]+ pixels[i]*kernel[1][1]+ pixels[i+width]*kernel[2][1]+
-                    pixels[i-width+1]*kernel[0][2]+ pixels[i+1]*kernel[1][2]+ pixels[i+width+1]*kernel[2][2];
-            pnew[i]=total;//ktotal;
+            pnew[i]=
+                pixels[i-width]*kernel[0][1]+ pixels[i]*kernel[1][1]+ pixels[i+width]*kernel[2][1]+
+                pixels[i-width+1]*kernel[0][2]+ pixels[i+1]*kernel[1][2]+ pixels[i+width+1]*kernel[2][2];
         }
         
-        //right edge
-        ktotal=kernel[0][0]+kernel[1][0]+kernel[2][0]+kernel[0][1]+kernel[1][1]+kernel[2][1];
+        // right edge
         for(int i=2*width-1; i<width*height-1; i+=width){
-            total=pixels[i-width-1]*kernel[0][0]+ pixels[i-1]*kernel[1][0]+ pixels[i+width-1]*kernel[2][0]+
-                    pixels[i-width]*kernel[0][1]+ pixels[i]*kernel[1][1]+ pixels[i+width]*kernel[2][1];
-            pnew[i]=total;//ktotal;
+            pnew[i]=
+                pixels[i-width-1]*kernel[0][0]+ pixels[i-1]*kernel[1][0]+ pixels[i+width-1]*kernel[2][0]+
+                pixels[i-width]*kernel[0][1]+ pixels[i]*kernel[1][1]+ pixels[i+width]*kernel[2][1];
         }
         
         return pnew;
